@@ -1,6 +1,7 @@
 //Main file to run the Plagiarism Detection System
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class PlagiarismDetector {
@@ -20,10 +21,13 @@ public class PlagiarismDetector {
 
         System.out.println(myDirectory);
         //converts each file in directory to generalized file.
+        File file = new File("testFile1.txt");
+        file.createNewFile();
         for (File assignment : directoryListing) {
             System.out.println(assignment);
-            ConvertFile.textConverter(assignment);
+            ConvertFile.textConverter(assignment, file);
         }
+        file.delete();
     }
 
 }
