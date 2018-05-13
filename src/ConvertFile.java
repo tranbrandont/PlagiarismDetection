@@ -1,11 +1,13 @@
 //Converts files to a generalized version of the file
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Scanner;
 
 public class ConvertFile {
@@ -14,20 +16,11 @@ public class ConvertFile {
     //Writes generalized version to a new file
 	private static ArrayList<String> keywords = new ArrayList<String>();
 	private static ArrayList<String> types = new ArrayList<String>();
+	private static HashMap<String, Character> commonKeywords;
 	
-    public static void textConverter (File assignment, File outputFile) {
+    public static void textConverter (File assignment, String fileName) {
     	// Helps keep track of recurring variables in file.
-    	InitializeCPPLists("cpp_keywords.txt");
-    	FileWriter writer = null;
-    	try
-		{
-			writer = new FileWriter(outputFile);
-		} 
-    	catch (IOException e1)
-		{
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+    	
     	//ArrayList<String> commmonVars = new ArrayList<String>();
     	Scanner scanner;
     	StringBuilder builder = new StringBuilder();
@@ -46,19 +39,20 @@ public class ConvertFile {
     		currentLine = scanner.nextLine();
     		ProcessLine(currentLine, builder);
     	}
-    	try
-		{
-			writer.write(builder.toString());
-		} 
-    	catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+    	try(FileWriter fw = new FileWriter(fileName, true);
+    		    BufferedWriter bw = new BufferedWriter(fw);
+    		    PrintWriter out = new PrintWriter(bw))
+    		{
+    		    out.println(builder.toString());
+    		    System.out.println("Printed!");
+    		} catch (IOException e) {
+    		    //exception handling left as an exercise for the reader
+    		}
+
     	scanner.close();
     }
     
-    private static void ProcessLine(String line, StringBuilder output)
+	private static void ProcessLine(String line, StringBuilder output)
     {
     	
     	int currentCharIndex = 0;
@@ -66,18 +60,20 @@ public class ConvertFile {
     	while(currentCharIndex < line.length())
     	{
     		char c = line.charAt(currentCharIndex);
-    		if(Character.isLetter(c) || c == '_')
+    		if((Character.isLetter(c) || c == '_') && currentCharIndex + 1 <= line.length()-1)
     		{
     			char nextc = line.charAt(currentCharIndex+1);
     			tempIndex = currentCharIndex+1;
-    			while(Character.isLetter(nextc) || nextc == '_' || Character.isDigit(nextc))
+    			while((Character.isLetter(nextc) || nextc == '_' || Character.isDigit(nextc)) && tempIndex < line.length())
     			{
     				tempIndex++;
-    				nextc = line.charAt(tempIndex);
+    				if(tempIndex < line.length())
+    				{
+    					nextc = line.charAt(tempIndex);
+    				}
     			}
     			String str = line.substring(currentCharIndex, tempIndex);
     			//Make sure to ignore extra spaces before checking next character
-    			
     			if (isKeyword(str))
     			{
     				if(isType(str))
@@ -93,10 +89,10 @@ public class ConvertFile {
     				}
     				else
     				{
-    					output.append("k");
+    					output.append(GetKeywordChar(str));
     				}
     			}
-    			else if(line.charAt(tempIndex+1) == '(')
+    			else if(line.charAt(Math.min(line.length()-1,tempIndex+1)) == '(' || line.charAt(tempIndex) == '(')
     			{
     				output.append("f"); 
     			}
@@ -104,7 +100,7 @@ public class ConvertFile {
     			{
     				output.append("v");
     			}
-    			currentCharIndex = tempIndex+1;
+    			currentCharIndex = tempIndex;
     		}
     		else if(Character.isDigit(c))
     		{
@@ -116,7 +112,7 @@ public class ConvertFile {
     			output.append("d");
     			currentCharIndex = tempIndex;
     		}
-    		else if(c == ' ')
+    		else if(c == ' ' || c == '\t' || c == '{' || c == '}' || c == ',')
     		{
     			currentCharIndex++;
     		}
@@ -135,6 +131,16 @@ public class ConvertFile {
     			output.append("s");
     			currentCharIndex = tempIndex+1;
     		}
+    		else if(c == '\'')
+    		{
+    			tempIndex = currentCharIndex + 1;
+    			while (line.charAt(tempIndex) != '\'')
+    			{
+    				tempIndex++;
+    			}
+    			output.append("h");
+    			currentCharIndex = tempIndex+1;
+    		}
     		else if(c == '/' && line.charAt(currentCharIndex+1) == '/')
     		{
     			return;
@@ -147,7 +153,7 @@ public class ConvertFile {
     	}
     }
     
-    private static void InitializeCPPLists(String path)
+    public static void InitializeCPPLists(String path)
     {
     	Scanner s = null;
     	String current = null;
@@ -187,6 +193,25 @@ public class ConvertFile {
     	s.close();
     }
     
+    public static void InitializeCommonKeywordsMap()
+    {
+    	commonKeywords = new HashMap<String, Character>();
+    	commonKeywords.put("do", 'o');
+    	commonKeywords.put("using", 'u');
+    	commonKeywords.put("namespace", 'm');
+    	commonKeywords.put("for", 'r');
+    	commonKeywords.put("switch", 'w');
+    	commonKeywords.put("case", 'c');
+    	commonKeywords.put("break", 'b');
+    	commonKeywords.put("if", 'x');
+    	commonKeywords.put("else", 'e');
+    	commonKeywords.put("false", 'l');
+    	commonKeywords.put("true", 'q');
+    	commonKeywords.put("while", 'y');
+    	commonKeywords.put("default", 'a');
+    	commonKeywords.put("return", 'z');
+    }
+    
     private static boolean isType(String str)
     {
     	for(String type: types) 
@@ -222,5 +247,17 @@ public class ConvertFile {
     	    }
     	}
     	return false;
+    }
+    
+    private static char GetKeywordChar(String str)
+    {
+    	if(commonKeywords.containsKey(str))
+    	{
+    		return commonKeywords.get(str);
+    	}
+    	else
+    	{
+    		return 'k';
+    	}
     }
 }
