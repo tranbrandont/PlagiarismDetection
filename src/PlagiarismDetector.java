@@ -1,7 +1,6 @@
 //Main file to run the Plagiarism Detection System
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 
 public class PlagiarismDetector {
@@ -18,16 +17,17 @@ public class PlagiarismDetector {
         String myDirectory = ChooseDirectoryGui.getPath();
         File dir = new File(myDirectory);
         File[] directoryListing = dir.listFiles();
+        ConvertFile.InitializeCPPLists("cpp_keywords.txt");
+    	ConvertFile.InitializeCommonKeywordsMap();
 
         System.out.println(myDirectory);
         //converts each file in directory to generalized file.
-        File file = new File("testFile1.txt");
-        file.createNewFile();
+        String str = Long.toHexString(Double.doubleToLongBits(Math.random()));
         for (File assignment : directoryListing) {
             System.out.println(assignment);
-            ConvertFile.textConverter(assignment, file);
+            ConvertFile.textConverter(assignment, str);
         }
-        file.delete();
+        FileComparer.CompareFiles(str, directoryListing.length);
     }
 
 }
