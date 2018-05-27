@@ -1,26 +1,27 @@
 //Main file to run the Plagiarism Detection System
 
+
 import java.io.File;
 import java.io.IOException;
 
 public class PlagiarismDetector {
     //Will read provided directory for c++ files for plagiarism detection
     public static void main (String[] args) throws IOException, InterruptedException {
-        int running = 0;
-
-        running = ChooseDirectoryGui.main(args);
+        ChooseDirectoryView.launch(ChooseDirectoryView.class, args);
+        String assignmentDirectory = "";
 
         //Waits for user to pick directory
-        while (running == 0) {
+        while (assignmentDirectory == "") {
+            assignmentDirectory = ChooseDirectoryView.getAssignmentDirectory();
             Thread.sleep(1000);
         }
-        String myDirectory = ChooseDirectoryGui.getPath();
-        File dir = new File(myDirectory);
+
+        File dir = new File(assignmentDirectory);
         File[] directoryListing = dir.listFiles();
         ConvertFile.InitializeCPPLists("cpp_keywords.txt");
     	ConvertFile.InitializeCommonKeywordsMap();
 
-        System.out.println(myDirectory);
+        System.out.println(assignmentDirectory);
         //converts each file in directory to generalized file.
         String str = Long.toHexString(Double.doubleToLongBits(Math.random()));
         for (File assignment : directoryListing) {
@@ -29,5 +30,7 @@ public class PlagiarismDetector {
         }
         FileComparer.CompareFiles(str, directoryListing.length);
     }
+
+
 
 }
