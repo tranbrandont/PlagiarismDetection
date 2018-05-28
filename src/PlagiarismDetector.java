@@ -49,7 +49,7 @@ public class PlagiarismDetector
 			for (int j = i; j < scores.length; j++)
 			{
 				//Only prints those above given threshold
-				if (StrToDouble(scores[i][j]) >= 90)
+				if (StrToDouble(scores[i][j]) >= 0 && StrToDouble(scores[i][j]) < 11)
 				{
 					System.out.println(fileNames.get(i).substring(0, 10) + "~ is " + scores[i][j]
 							+ "% similar to assignment " + fileNames.get(j+1).substring(0, 10) + "~");

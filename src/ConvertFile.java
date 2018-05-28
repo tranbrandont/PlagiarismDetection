@@ -14,6 +14,8 @@ public class ConvertFile
 {
 	// Takes a file to be read through and converted into a generalized version of
 	// the file.
+	// Will read line by line through file and call whichever function is suitable
+	// for that situation
 	// Writes generalized version to a new file
 	private static ArrayList<String> keywords = new ArrayList<String>();
 	private static ArrayList<String> types = new ArrayList<String>();
