@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -13,9 +14,10 @@ public class FileComparer
 	{
 		Scanner scanner1 = null;
 		Scanner scanner2 = null;
+		File originalFile = new File(fileName);
 		try
 		{
-			scanner1 = new Scanner(new File(fileName));
+			scanner1 = new Scanner(originalFile);
 
 		}
 		catch (FileNotFoundException e)
@@ -33,8 +35,12 @@ public class FileComparer
 		}
 		// End Common Occurrence calculation //
 		
-		File file = RemoveCommonElements(commonStructure, new File(fileName));
+		
+		File file = RemoveCommonElements(commonStructure, originalFile);
 		//File file = new File(fileName);
+		scanner1.close();
+		boolean deleted = originalFile.delete();
+		deleted = deleted;
 		try
 		{
 			scanner1 = new Scanner(file);
@@ -79,7 +85,10 @@ public class FileComparer
 				System.out.println("Didn't work");
 			}
 		}
+		scanner1.close();
+		scanner2.close();
 		System.out.println("Done");
+		deleted = file.delete();
 		return scores;
 	}
 
