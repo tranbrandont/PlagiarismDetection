@@ -1,5 +1,9 @@
 
+import java.util.ArrayList;
+import java.util.List;
 import javafx.application.Application;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
@@ -28,6 +32,8 @@ public class HomePageView extends Application {
     }
 
     private void initUI(Stage primaryStage) {
+
+        //create gridpane for window
         GridPane root = new GridPane();
         root.setHgap(8);
         root.setVgap(8);
@@ -36,7 +42,7 @@ public class HomePageView extends Application {
         //create all the parts of the GUI
         Button chooseDirectory = new Button("Directory");
         TextField directoryPath = new TextField();
-        ListView view = new ListView();
+        ListView<OutputCell> outputListView = new ListView<OutputCell>();
         Button runProgram = new Button("Run");
 
         DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -59,7 +65,7 @@ public class HomePageView extends Application {
 
         root.getRowConstraints().addAll(rcons1, rcons2);
 
-
+        //on directory button click
         chooseDirectory.setOnAction(e -> {
             File selectedDirectory = directoryChooser.showDialog(primaryStage);
             if (selectedDirectory != null) {
@@ -68,6 +74,7 @@ public class HomePageView extends Application {
             }
         });
 
+        //on run program button click
         runProgram.setOnAction(e -> {
             if(directoryPath.getText() == "") {
                 //throw error
@@ -81,14 +88,14 @@ public class HomePageView extends Application {
                 // converts each file in directory to generalized file.
                 String str = Long.toHexString(Double.doubleToLongBits(Math.random()));
                 int validFileCount = 1;
-                ArrayList<String> fileNames = new ArrayList<String>();
+                ArrayList<File> validFiles = new ArrayList<File>();
                 for (File assignment : directoryListing)
                 {
                     String name = assignment.getName();
                     name = name.substring(name.length() - 3, name.length());
                     if (name.equals("cpp"))
                     {
-                        fileNames.add(assignment.getName());
+                        validFiles.add(assignment);
                         System.out.print(validFileCount + ": ");
                         System.out.println(assignment);
                         ConvertFile.textConverter(assignment, str);
@@ -97,6 +104,7 @@ public class HomePageView extends Application {
                     }
                 }
                 String[][] scores = FileComparer.CompareFiles(str, validFileCount - 1);
+                List<OutputCell> listResults = new ArrayList<>();
                 for (int i = 0; i < scores.length; i++)
                 {
                     for (int j = i; j < scores.length; j++)
@@ -104,23 +112,24 @@ public class HomePageView extends Application {
                         //Only prints those above given threshold
                         if (StrToDouble(scores[i][j]) >= 90)
                         {
-                            System.out.println(fileNames.get(i).substring(0, 10) + "~ is " + scores[i][j]
-                                    + "% similar to assignment " + fileNames.get(j+1).substring(0, 10) + "~");
+                            listResults.add(new OutputCell(validFiles.get(i), validFiles.get(j+1), scores[i][j]));
                         }
                     }
                 }
+                ObservableList<OutputCell> observableListResults = FXCollections.observableList(listResults);
+                outputListView.setItems(observableListResults);
                 System.out.println("Done!");
             }
         });
 
         GridPane.setHalignment(runProgram, HPos.RIGHT);
-
+        //add items to window
         root.add(chooseDirectory, 0, 0);
         root.add(directoryPath, 1, 0, 2, 1);
-        root.add(view, 0, 1, 4, 2);
+        root.add(outputListView, 0, 1, 4, 2);
         root.add(runProgram, 3, 0);
 
-        Scene scene = new Scene(root, 280, 300);
+        Scene scene = new Scene(root, 550, 600);
 
         primaryStage.setTitle("Copy Catch");
         primaryStage.setScene(scene);
