@@ -64,7 +64,7 @@ public class DisplayTextFiles {
     primaryStage.setY(primaryScreenBounds.getMinY());
     primaryStage.setWidth(primaryScreenBounds.getWidth());
     primaryStage.setHeight(primaryScreenBounds.getHeight());
-
+    primaryStage.setTitle("Copy Catch");
     primaryStage.show();
   }
 }
