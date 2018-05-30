@@ -2,6 +2,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,12 +23,8 @@ public class OutputCell extends HBox {
         viewFiles.setText("View files");
 
         viewFiles.setOnAction(e -> {
-            try {
-                java.awt.Desktop.getDesktop().edit(firstFile);
-            }
-            catch (IOException err) {
-
-            }
+            Stage dialog = new Stage();
+            DisplayTextFiles.viewFiles(dialog, firstFile, secondFile);
         });
 
         this.getChildren().addAll(label, viewFiles);
