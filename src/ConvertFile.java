@@ -157,12 +157,12 @@ public class ConvertFile
 				}
 				else if(c == '<' && (currentCharIndex + 1) < line.length() && line.charAt(currentCharIndex + 1) == '<')
 				{
-					output.append('‹');
+					output.append('{');
 					currentCharIndex += 2;
 				}
 				else if(c == '>' && (currentCharIndex + 1) < line.length() && line.charAt(currentCharIndex + 1) == '>')
 				{
-					output.append('›');
+					output.append('}');
 					currentCharIndex += 2;
 				}
 				else if (c == '"')
