@@ -1,15 +1,14 @@
 //Main file to run the Plagiarism Detection System
 
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class PlagiarismDetector {
 	// Will read provided directory for c++ files for plagiarism detection
 	public static void main(String[] args) throws IOException, InterruptedException
 	{
 	    HomePageView.launch(HomePageView.class, args);
+	    
 //        //ChooseDirectoryView.launch(ChooseDirectoryView.class, args);
 //        String assignmentDirectory = "";
 //

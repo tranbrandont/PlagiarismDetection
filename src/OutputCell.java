@@ -5,8 +5,6 @@ import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 public class OutputCell extends HBox {
     Label label = new Label();

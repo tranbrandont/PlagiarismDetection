@@ -69,6 +69,36 @@ public class ConvertFile
 		scanner.close();
 		
 	}
+	
+	// FileStatsVersion
+	public static void textConverter(File assignment, FileStats fileStats)
+	{
+		// Helps keep track of recurring variables in file.
+
+		// ArrayList<String> commmonVars = new ArrayList<String>();
+		Scanner scanner;
+		StringBuilder builder = new StringBuilder();
+
+		try
+		{
+			scanner = new Scanner(assignment);
+		}
+		catch (FileNotFoundException e)
+		{
+			System.out.println(assignment.getAbsolutePath() + " does not exist. Skipping...");
+			return;
+		}
+		String currentLine;
+		while (scanner.hasNextLine())
+		{
+			currentLine = scanner.nextLine();
+			ProcessLine(currentLine, builder);
+			fileStats.HandleLine(builder.toString());
+			builder.setLength(0);
+		}
+
+		scanner.close();	
+	}
 
 	private static void ProcessLine(String line, StringBuilder output)
 	{

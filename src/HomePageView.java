@@ -1,6 +1,7 @@
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -8,7 +9,6 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.ColumnConstraints;
@@ -19,12 +19,12 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
-import java.util.ArrayList;
 
 public class HomePageView extends Application {
 
     private static String assignmentDirectory;
-
+    
+    private static List<FileStats> fileStats;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -46,6 +46,7 @@ public class HomePageView extends Application {
         Button runProgram = new Button("Run");
 
         DirectoryChooser directoryChooser = new DirectoryChooser();
+        
 
 
         ColumnConstraints cons1 = new ColumnConstraints();
@@ -79,6 +80,7 @@ public class HomePageView extends Application {
             if(directoryPath.getText() == "") {
                 //throw error
             } else {
+            	fileStats = new ArrayList<FileStats>();
                 File dir = new File(assignmentDirectory);
                 File[] directoryListing = dir.listFiles();
                 ConvertFile.InitializeCPPLists("cpp_keywords.txt");
@@ -86,7 +88,7 @@ public class HomePageView extends Application {
 
                 System.out.println(assignmentDirectory);
                 // converts each file in directory to generalized file.
-                String str = Long.toHexString(Double.doubleToLongBits(Math.random()));
+                //String str = Long.toHexString(Double.doubleToLongBits(Math.random()));
                 int validFileCount = 1;
                 ArrayList<File> validFiles = new ArrayList<File>();
                 for (File assignment : directoryListing)
@@ -98,12 +100,18 @@ public class HomePageView extends Application {
                         validFiles.add(assignment);
                         System.out.print(validFileCount + ": ");
                         System.out.println(assignment);
-                        ConvertFile.textConverter(assignment, str);
+                        
+                        // Implementing FileStats
+                        fileStats.add(new FileStats(assignment.getName()));
+                        
                         // ConvertFile.textConverter(assignment, str);
+                        
+                        ConvertFile.textConverter(assignment, fileStats.get(fileStats.size()-1));
                         validFileCount++;
                     }
                 }
-                String[][] scores = FileComparer.CompareFiles(str, validFileCount - 1);
+                //String[][] scores = FileComparer.CompareFiles(str, validFileCount - 1);
+                String[][] scores = FileComparer.CompareFiles(fileStats, runProgram);
                 List<OutputCell> listResults = new ArrayList<>();
                 for (int i = 0; i < scores.length; i++)
                 {

@@ -4,9 +4,12 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
+
+import javafx.scene.control.Button;
+import javafx.scene.control.ProgressBar;
 
 public class FileComparer
 {
@@ -39,8 +42,6 @@ public class FileComparer
 		File file = RemoveCommonElements(commonStructure, originalFile);
 		//File file = new File(fileName);
 		scanner1.close();
-		boolean deleted = originalFile.delete();
-		deleted = deleted;
 		try
 		{
 			scanner1 = new Scanner(file);
@@ -63,15 +64,10 @@ public class FileComparer
 			for (int j = i + 1; j <= scores.length; j++)
 			{
 				String str2 = scanner2.nextLine();
-				int distance = CalculateEditDistance(str1, str2, str1.length(), str2.length());
+				int distance = CalculateEditDistance(str1, str2);
 				int bigger = Math.max(str1.length(), str2.length());
 				double percent = (bigger - distance) / (double) bigger * 100;
 				scores[i][j - 1] = String.format("%.2f", percent);
-				if(scores[i][j - 1].equals("33.33"))
-				{
-					int p = 3;
-					p++;
-				}
 			}
 			try
 			{
@@ -81,20 +77,55 @@ public class FileComparer
 			}
 			catch (FileNotFoundException e)
 			{
-				// TODO Auto-generated catch block
 				System.out.println("Didn't work");
 			}
 		}
 		scanner1.close();
 		scanner2.close();
 		System.out.println("Done");
-		deleted = file.delete();
+		file.delete();
+		return scores;
+	}
+	
+	public static String[][] CompareFiles(List<FileStats> files, Button btn)
+	{
+		
+		String[][] scores = new String[files.size() - 1][files.size() - 1];
+
+		// Find Common occurrences among all files //
+		String commonStructure  = files.get(0).GetAllLinesAsString();
+		String next;
+		for (int i = 0; i < files.size()-1; i++)
+		{
+			commonStructure = lcs(commonStructure, next = files.get(i+1).GetAllLinesAsString(), commonStructure.length(), next.length());
+		}
+		// End Common Occurrence calculation //
+		System.out.println("Running File Comparison...");
+		double totalCalculations = (files.size()*(files.size()-1))/2;
+		double completedCalculations = 0;
+		for (int i = 0; i < files.size()-1; i++)
+		{
+			for(int j = i+1; j < files.size(); j++)
+			{
+				String str1 = files.get(i).GetAllLinesAsString();
+				String str2 = files.get(j).GetAllLinesAsString();
+				int distance = CalculateEditDistance(str1, str2);
+				int bigger = Math.max(str1.length(), str2.length());
+				double percent = (bigger - distance) / (double) bigger * 100;
+				scores[i][j - 1] = String.format("%.2f", percent);
+			}
+			completedCalculations++;
+			btn.setText(Double.toString(completedCalculations));
+		}
+		System.out.println();
 		return scores;
 	}
 
-	static int CalculateEditDistance(String str1, String str2, int m, int n)
+	static int CalculateEditDistance(String str1, String str2)
 	{
 		// Create a table to store results of subproblems
+		int m = str1.length();
+		int n = str2.length();
 		int dp[][] = new int[m + 1][n + 1];
 
 		// Fill d[][] in bottom up manner
@@ -192,7 +223,6 @@ public class FileComparer
 				j--;
 		}
 
-		// Print the lcs
 		StringBuilder str = new StringBuilder();
 		for (int k = 0; k <= temp; k++)
 			str.append(lcs[k]);
@@ -209,7 +239,6 @@ public class FileComparer
 		}
 		catch (FileNotFoundException e1)
 		{
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		while (scanner.hasNextLine())
@@ -237,7 +266,6 @@ public class FileComparer
 					BufferedWriter bw = new BufferedWriter(fw);
 					PrintWriter out = new PrintWriter(bw))
 			{
-				int mid = builder.toString().length();
 				out.println(builder.toString());
 				out.flush();
 				out.close();
