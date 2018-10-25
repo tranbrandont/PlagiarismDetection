@@ -8,12 +8,14 @@ public class FileStats
 	private String fileName;
 	private ArrayList <String> tokenizedLines;
 	private Map <Character, Integer> tokenCount;
+	private int stringLength = 0;
+	private boolean isOutlier;
 	static public double[][] scores;
 	  
 	/* Constructor */
 	FileStats(String name) 
 	{
-		//this.fileName = name;
+		this.fileName = name;
 		tokenizedLines = new ArrayList<String>();
 		tokenCount = new HashMap<Character, Integer>();
 	}
@@ -37,6 +39,9 @@ public class FileStats
 	private void WriteLine (String str)
 	{
 		tokenizedLines.add(str);
+		
+		//Possible delimiter character to implement later
+		//tokenizedLines.add("¡"+str);
 	}
 	
 	// Function that calls adds all of a line's tokenized
@@ -55,6 +60,7 @@ public class FileStats
 	{
 		WriteLine(str);
 		HashLine(str);
+		setStringLength(getStringLength() + str.length());
 	}
 	
 	// returns the tokenCount for a given file
@@ -92,5 +98,23 @@ public class FileStats
 	public static void SetScoresSize(int size)
 	{
 		scores = new double[size][size];
+	}
+
+	public int getStringLength() {
+		return stringLength;
+	}
+
+	public void setStringLength(int stringLength) {
+		this.stringLength = stringLength;
+	}
+	
+	public void MakeOutlier ()
+	{
+		isOutlier = true;
+	}
+	
+	public boolean IsOutlier ()
+	{
+		return isOutlier;
 	}
 }

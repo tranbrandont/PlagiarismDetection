@@ -8,85 +8,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
+
 import javafx.scene.control.Button;
 
 public class FileComparer
 {
-	private static int completedComparisons;
-	
-	public static String[][] CompareFiles(String fileName, int fileCount)
-	{
-		Scanner scanner1 = null;
-		Scanner scanner2 = null;
-		File originalFile = new File(fileName);
-		try
-		{
-			scanner1 = new Scanner(originalFile);
-
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-		}
-		String[][] scores = new String[fileCount - 1][fileCount - 1];
-
-		// Find Common occurrences among all files//
-		String commonStructure = scanner1.nextLine();
-		while (scanner1.hasNextLine())
-		{
-			String next = scanner1.nextLine();
-			commonStructure = lcs(commonStructure, next, commonStructure.length(), next.length());
-		}
-		// End Common Occurrence calculation //
-		
-		
-		File file = RemoveCommonElements(commonStructure, originalFile);
-		//File file = new File(fileName);
-		scanner1.close();
-		try
-		{
-			scanner1 = new Scanner(file);
-			scanner2 = new Scanner(file);
-
-		}
-		catch (FileNotFoundException e)
-		{
-			e.printStackTrace();
-		}
-		
-		System.out.println("Running File Comparison...");
-		for (int i = 0; i < scores.length; i++)
-		{
-			String str1 = scanner1.nextLine();
-			for (int k = 0; k <= i; k++)
-			{
-				scanner2.nextLine();
-			}
-			for (int j = i + 1; j <= scores.length; j++)
-			{
-				String str2 = scanner2.nextLine();
-				int distance = CalculateEditDistance(str1, str2);
-				int bigger = Math.max(str1.length(), str2.length());
-				double percent = (bigger - distance) / (double) bigger * 100;
-				scores[i][j - 1] = String.format("%.2f", percent);
-			}
-			try
-			{
-				scanner2.close();
-				scanner2 = null;
-				scanner2 = new Scanner(file);
-			}
-			catch (FileNotFoundException e)
-			{
-				System.out.println("Didn't work");
-			}
-		}
-		scanner1.close();
-		scanner2.close();
-		System.out.println("Done");
-		file.delete();
-		return scores;
-	}
 	
 	public static String[][] CompareFiles(List<FileStats> files, Button btn)
 	{
@@ -114,7 +40,6 @@ public class FileComparer
 				int bigger = Math.max(str1.length(), str2.length());
 				double percent = (bigger - distance) / (double) bigger * 100;
 				scores[i][j - 1] = String.format("%.2f", percent);
-				completedComparisons++;
 			}
 			btn.setText(Double.toString(completedCalculations));
 		}
@@ -283,8 +208,37 @@ public class FileComparer
 		return new File(str);
 	}
 	
-	public int getCompletedComparisons ()
+	public static void FindOutliers(List<FileStats> files)
 	{
-		return FileComparer.completedComparisons;
+		int [] lengths = new int[files.size()];
+		for (int i = 0; i < files.size(); i++)
+		{
+			lengths[i] = files.get(i).getStringLength();
+		}
+		double sum = 0.0, standardDeviation = 0.0;
+        int length = lengths.length;
+
+        for(double num : lengths) {
+            sum += num;
+        }
+
+        double mean = sum/length;
+
+        for(double num: lengths) {
+            standardDeviation += Math.pow(num - mean, 2);
+        }
+        standardDeviation = Math.sqrt(standardDeviation/length)*2;
+        
+        int outlierCount = 0;
+        for(FileStats file : files)
+        {
+        	int strLen = file.getStringLength(); 
+        	if (strLen > mean + standardDeviation || strLen < mean - standardDeviation)
+        	{
+        		file.MakeOutlier();
+        		outlierCount++;
+        	}
+        }
+        System.out.println("Done checking outliers");
 	}
 }

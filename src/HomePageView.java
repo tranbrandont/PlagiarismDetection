@@ -1,6 +1,7 @@
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -143,18 +144,10 @@ public class HomePageView extends Application {
                         // Implementing FileStats
                         fileStats.add(new FileStats(assignment.getName()));
                         
-                        // ConvertFile.textConverter(assignment, str);
-                        
                         ConvertFile.textConverter(assignment, fileStats.get(fileStats.size()-1));
                         validFileCount++;
                     }
                 }
-                
-                
-                
-                //fileStats.get(0).SetScoresSize(fileStats.size()-1);
-                
-                // CONSIDERING MOVING FILE COMPARE LOOP HERE SO WE CAN UPDATE A PROGRESS BAR
 
                 Task<Void> task = new Task<Void>() 
                 {
@@ -163,13 +156,22 @@ public class HomePageView extends Application {
                         final int totalComparisons = (fileStats.size()*(fileStats.size()-1))/2;
                         int completedComparisons = 0;
                         FileStats.SetScoresSize(fileStats.size()-1);
+                        diff_match_patch dmp = new diff_match_patch();
+                        FileComparer.FindOutliers(fileStats);
                         for (int i=0; i < fileStats.size()-1; i++) 
                         {
                             for (int j = i+1; j <= fileStats.size()-1; j++ )
                             {
                             	String str1 = fileStats.get(i).GetAllLinesAsString();
                 				String str2 = fileStats.get(j).GetAllLinesAsString();
-                				int distance = FileComparer.CalculateEditDistance(str1, str2);
+                				// DIFF IMPLEMENTATION
+                			    LinkedList<diff_match_patch.Diff> diff = dmp.diff_main(str1, str2);
+                			    dmp.diff_cleanupSemantic(diff);
+                			    //System.out.println(diff);
+                			    int distance = dmp.diff_levenshtein(diff);
+                			    // /DIFF IMPLEMENTATION
+                				//int distance = FileComparer.CalculateEditDistance(str1, str2);
+
                 				int bigger = Math.max(str1.length(), str2.length());
                 				double percent = (bigger - distance) / (double) bigger * 100;
                 				FileStats.scores[i][j - 1] = Double.parseDouble(String.format("%.2f", percent));
@@ -215,18 +217,7 @@ public class HomePageView extends Application {
                 dialogStage.setTitle("Comparing Files...");
                 dialogStage.show();
                 new Thread(task).start();;
-                
-                
-                // END FILE COMPARE TASK!!
-                /*
-                while(task.isRunning())
-                {
-                	
-                }
-                
-                */
             }
-            
         });
         
         
@@ -263,7 +254,7 @@ public class HomePageView extends Application {
             for (int j = i; j < scores.length; j++)
             {
                 //Only prints those above given threshold
-                if (scores[i][j] >= 90)
+                if (scores[i][j] >= 70)
                 {
                     listResults.add(new OutputCell(validFiles.get(i), validFiles.get(j+1), Double.toString(scores[i][j])));
                 }
