@@ -9,10 +9,11 @@ import java.util.List;
 import java.util.Scanner;
 
 import javafx.scene.control.Button;
-import javafx.scene.control.ProgressBar;
 
 public class FileComparer
 {
+	private static int completedComparisons;
+	
 	public static String[][] CompareFiles(String fileName, int fileCount)
 	{
 		Scanner scanner1 = null;
@@ -101,7 +102,7 @@ public class FileComparer
 		}
 		// End Common Occurrence calculation //
 		System.out.println("Running File Comparison...");
-		double totalCalculations = (files.size()*(files.size()-1))/2;
+		//double totalCalculations = (files.size()*(files.size()-1))/2;
 		double completedCalculations = 0;
 		for (int i = 0; i < files.size()-1; i++)
 		{
@@ -113,8 +114,8 @@ public class FileComparer
 				int bigger = Math.max(str1.length(), str2.length());
 				double percent = (bigger - distance) / (double) bigger * 100;
 				scores[i][j - 1] = String.format("%.2f", percent);
+				completedComparisons++;
 			}
-			completedCalculations++;
 			btn.setText(Double.toString(completedCalculations));
 		}
 		System.out.println();
@@ -280,5 +281,10 @@ public class FileComparer
 		}
 		scanner.close();
 		return new File(str);
+	}
+	
+	public int getCompletedComparisons ()
+	{
+		return FileComparer.completedComparisons;
 	}
 }

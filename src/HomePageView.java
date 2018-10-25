@@ -1,30 +1,46 @@
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javafx.application.Application;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.io.File;
+import javafx.stage.StageStyle;
 
 public class HomePageView extends Application {
 
     private static String assignmentDirectory;
-    
+    private static ArrayList<File> validFiles;
     private static List<FileStats> fileStats;
+    private static ListView<OutputCell> outputListView;
+    private static Stage dialogStage;
+    private static Label progressText;
+    private static boolean comparisonRan = false;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -42,7 +58,7 @@ public class HomePageView extends Application {
         //create all the parts of the GUI
         Button chooseDirectory = new Button("Directory");
         TextField directoryPath = new TextField();
-        ListView<OutputCell> outputListView = new ListView<OutputCell>();
+        outputListView = new ListView<OutputCell>();
         Button runProgram = new Button("Run");
 
         DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -77,9 +93,32 @@ public class HomePageView extends Application {
 
         //on run program button click
         runProgram.setOnAction(e -> {
-            if(directoryPath.getText() == "") {
-                //throw error
+            if(directoryPath.getText().compareTo("") == 0) {
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("No Selected Directory");
+                alert.setHeaderText(null);
+                alert.setContentText("You must select a directory to run the scan on first.");
+                alert.showAndWait();
+                return;
+                
             } else {
+            	if(comparisonRan)
+            	{
+            		// Ask user if they want to run ANOTHER comparison with dialog
+            		// Inform them that prior results will be lost.
+            		// Get buttonclick result and proceed or return
+            		Alert alert = new Alert(AlertType.CONFIRMATION);
+            		alert.setTitle("New Comparison Confirmation");
+            		alert.setHeaderText(null);
+            		alert.setContentText("If you run another comparison, your prior results will be lost. Proceed?");
+
+            		Optional<ButtonType> result = alert.showAndWait();
+            		if (result.get() == ButtonType.CANCEL)
+            		{
+            			return;
+            		} 
+            	}
+            	outputListView.setItems(null);
             	fileStats = new ArrayList<FileStats>();
                 File dir = new File(assignmentDirectory);
                 File[] directoryListing = dir.listFiles();
@@ -90,7 +129,7 @@ public class HomePageView extends Application {
                 // converts each file in directory to generalized file.
                 //String str = Long.toHexString(Double.doubleToLongBits(Math.random()));
                 int validFileCount = 1;
-                ArrayList<File> validFiles = new ArrayList<File>();
+                validFiles = new ArrayList<File>();
                 for (File assignment : directoryListing)
                 {
                     String name = assignment.getName();
@@ -110,25 +149,87 @@ public class HomePageView extends Application {
                         validFileCount++;
                     }
                 }
-                //String[][] scores = FileComparer.CompareFiles(str, validFileCount - 1);
-                String[][] scores = FileComparer.CompareFiles(fileStats, runProgram);
-                List<OutputCell> listResults = new ArrayList<>();
-                for (int i = 0; i < scores.length; i++)
+                
+                
+                
+                //fileStats.get(0).SetScoresSize(fileStats.size()-1);
+                
+                // CONSIDERING MOVING FILE COMPARE LOOP HERE SO WE CAN UPDATE A PROGRESS BAR
+
+                Task<Void> task = new Task<Void>() 
                 {
-                    for (int j = i; j < scores.length; j++)
+                    @Override public Void call() 
                     {
-                        //Only prints those above given threshold
-                        if (StrToDouble(scores[i][j]) >= 90)
+                        final int totalComparisons = (fileStats.size()*(fileStats.size()-1))/2;
+                        int completedComparisons = 0;
+                        FileStats.SetScoresSize(fileStats.size()-1);
+                        for (int i=0; i < fileStats.size()-1; i++) 
                         {
-                            listResults.add(new OutputCell(validFiles.get(i), validFiles.get(j+1), scores[i][j]));
+                            for (int j = i+1; j <= fileStats.size()-1; j++ )
+                            {
+                            	String str1 = fileStats.get(i).GetAllLinesAsString();
+                				String str2 = fileStats.get(j).GetAllLinesAsString();
+                				int distance = FileComparer.CalculateEditDistance(str1, str2);
+                				int bigger = Math.max(str1.length(), str2.length());
+                				double percent = (bigger - distance) / (double) bigger * 100;
+                				FileStats.scores[i][j - 1] = Double.parseDouble(String.format("%.2f", percent));
+                				completedComparisons++;
+                            	updateProgress(completedComparisons, totalComparisons);
+                            }
                         }
+                        return null;
                     }
+                };
+                task.setOnSucceeded(ep -> {
+                	DisplayResults();
+                });
+                dialogStage = new Stage();
+                dialogStage.initStyle(StageStyle.UTILITY);
+                dialogStage.setOnCloseRequest(pe ->{
+                	pe.consume();
+                });
+                dialogStage.setResizable(false);
+                dialogStage.initModality(Modality.APPLICATION_MODAL);
+                ProgressBar pbar = new ProgressBar();
+                progressText = new Label();
+                
+                pbar.progressProperty().bind(task.progressProperty());
+                pbar.setPrefWidth(300);
+                pbar.progressProperty().addListener(new ChangeListener<Number>() {
+                    @Override
+                    public void changed(ObservableValue<? extends Number> ov, Number t, Number newValue) {
+                    	String str = Integer.toString((int)((double)newValue*100)+1)+ "%";
+                        progressText.setText(str);
+                    }
+                });
+                BorderPane bp = new BorderPane ();
+                bp.setPadding(new Insets (10,10,10,10));
+                bp.setLeft(pbar);
+                bp.setRight(progressText);
+                BorderPane.setAlignment(progressText, Pos.CENTER_RIGHT);
+                BorderPane.setAlignment(pbar, Pos.CENTER_LEFT);
+                Scene scene = new Scene(bp);
+                dialogStage.setScene(scene);
+                dialogStage.setHeight(100);
+                dialogStage.setWidth(400);
+                dialogStage.setTitle("Comparing Files...");
+                dialogStage.show();
+                new Thread(task).start();;
+                
+                
+                // END FILE COMPARE TASK!!
+                /*
+                while(task.isRunning())
+                {
+                	
                 }
-                ObservableList<OutputCell> observableListResults = FXCollections.observableList(listResults);
-                outputListView.setItems(observableListResults);
-                System.out.println("Done!");
+                
+                */
             }
+            
         });
+        
+        
 
         GridPane.setHalignment(runProgram, HPos.RIGHT);
         //add items to window
@@ -144,9 +245,33 @@ public class HomePageView extends Application {
         primaryStage.show();
     }
 
+    /* No longer needed?
     private static double StrToDouble(String str)
     {
         return Double.parseDouble(str);
+    }
+    */
+    public void DisplayResults()
+    {
+    	comparisonRan = true;
+    	dialogStage.hide();
+        double scores[][] = FileStats.scores;
+        
+        List<OutputCell> listResults = new ArrayList<>();
+        for (int i = 0; i < scores.length; i++)
+        {
+            for (int j = i; j < scores.length; j++)
+            {
+                //Only prints those above given threshold
+                if (scores[i][j] >= 90)
+                {
+                    listResults.add(new OutputCell(validFiles.get(i), validFiles.get(j+1), Double.toString(scores[i][j])));
+                }
+            }
+        }
+        ObservableList<OutputCell> observableListResults = FXCollections.observableList(listResults);
+        outputListView.setItems(observableListResults);
+        System.out.println("Done!");
     }
 }
 

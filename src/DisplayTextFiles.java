@@ -6,6 +6,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 
+import javafx.geometry.Insets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,6 +21,9 @@ public class DisplayTextFiles {
     SplitPane window = new SplitPane();
     ScrollPane fileOne = new ScrollPane();
     ScrollPane fileTwo = new ScrollPane();
+    Insets value = new Insets(0, 10, 0, 10);
+    fileOne.setPadding(value);
+    fileTwo.setPadding(value);
 //    HBox.setHgrow(fileOne, Priority.ALWAYS);
 //    HBox.setHgrow(fileTwo, Priority.ALWAYS);
 //    fileOne.setMaxWidth(Double.MAX_VALUE);
