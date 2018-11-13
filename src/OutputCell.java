@@ -10,11 +10,11 @@ public class OutputCell extends HBox {
     Label label = new Label();
     Button viewFiles = new Button();
 
-    public OutputCell(File firstFile, File secondFile, String score) {
+    public OutputCell(StudentFiles studentFiles) {
         super();
 
-        label.setText(firstFile.getName().substring(0, 10) + "~ is " + score
-                + "% similar to assignment " + secondFile.getName().substring(0, 10) + "~");
+        label.setText(studentFiles.studentFile.getName().substring(0, 10) + "~ is similar to " +
+                studentFiles.similarFiles.size() + " other files.");
         label.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(label, Priority.ALWAYS);
 
@@ -22,7 +22,7 @@ public class OutputCell extends HBox {
 
         viewFiles.setOnAction(e -> {
             Stage dialog = new Stage();
-            DisplayTextFiles.viewFiles(dialog, firstFile, secondFile);
+            DisplayTextFiles.viewFiles(dialog, studentFiles);
         });
 
         this.getChildren().addAll(label, viewFiles);

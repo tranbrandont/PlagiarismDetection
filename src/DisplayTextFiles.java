@@ -1,10 +1,18 @@
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.SplitPane;
-import javafx.scene.text.Text;
+import javafx.scene.layout.*;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
+import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.richtext.CodeArea;
+import org.fxmisc.richtext.LineNumberFactory;
 
 import javafx.geometry.Insets;
 import java.io.File;
@@ -17,51 +25,78 @@ import java.nio.file.Paths;
  */
 public class DisplayTextFiles {
 
-  public static void viewFiles(Stage primaryStage, File assignmentOne, File assignmentTwo) {
-    SplitPane window = new SplitPane();
-    ScrollPane fileOne = new ScrollPane();
-    ScrollPane fileTwo = new ScrollPane();
-    Insets value = new Insets(0, 10, 0, 10);
-    fileOne.setPadding(value);
-    fileTwo.setPadding(value);
-//    HBox.setHgrow(fileOne, Priority.ALWAYS);
-//    HBox.setHgrow(fileTwo, Priority.ALWAYS);
-//    fileOne.setMaxWidth(Double.MAX_VALUE);
-//    fileTwo.setMaxWidth(Double.MAX_VALUE);
+    public static void viewFiles(Stage primaryStage, StudentFiles studentFiles) {
+        GridPane root = new GridPane();
+        SplitPane window = new SplitPane();
+        CodeArea fileOne = new CodeArea();
+        fileOne.setParagraphGraphicFactory(LineNumberFactory.get(fileOne));
+        CodeArea fileTwo = new CodeArea();
+        fileTwo.setParagraphGraphicFactory(LineNumberFactory.get(fileTwo));
 
+        ObservableList<File> files = FXCollections.observableArrayList(studentFiles.similarFiles);
+        ComboBox<File> comboBox = new ComboBox<>(files);
 
-    try {
-      String content = new String(Files.readAllBytes(Paths.get(assignmentOne.getAbsolutePath())));
-      Text text = new Text(content);
-      fileOne.setContent(text);
+        Button viewFiles = new Button("View files");
+
+        GridPane.setHalignment(viewFiles, HPos.CENTER);
+        GridPane.setHalignment(comboBox, HPos.RIGHT);
+
+        viewFiles.setOnAction(e -> {
+
+            try {
+                if (comboBox.getValue() != null && !comboBox.getValue().toString().isEmpty()) {
+                    String content = new String(Files.readAllBytes(Paths.get(comboBox.getValue().getAbsolutePath())));
+                    fileTwo.replaceText(0, 0, content);
+                }
+            } catch (IOException error) {
+
+            }
+        });
+
+        try {
+
+            String content = new String(Files.readAllBytes(Paths.get(studentFiles.studentFile.getAbsolutePath())));
+            fileOne.replaceText(0, 0, content);
+        } catch (IOException error) {
+
+        }
+
+        root.setHgap(8);
+        root.setVgap(8);
+        Insets value = new Insets(0, 10, 0, 10);
+        fileOne.setPadding(value);
+        fileTwo.setPadding(value);
+        ColumnConstraints cons1 = new ColumnConstraints();
+        cons1.setHgrow(Priority.ALWAYS);
+
+        root.getColumnConstraints().addAll(cons1);
+
+        RowConstraints rcons1 = new RowConstraints();
+        rcons1.setVgrow(Priority.NEVER);
+        RowConstraints rcons2 = new RowConstraints();
+        rcons2.setVgrow(Priority.ALWAYS);
+
+        root.getRowConstraints().addAll(rcons1, rcons2);
+        root.add(viewFiles, 0, 0);
+        root.add(comboBox, 0, 0);
+        root.add(window, 0, 1);
+
+        Scene scene = new Scene(root, 1000, 1000);
+        VirtualizedScrollPane<CodeArea> leftScreen = new VirtualizedScrollPane<>(fileOne);
+        VirtualizedScrollPane<CodeArea> rightScreen = new VirtualizedScrollPane<>(fileTwo);
+
+        window.getItems().addAll(leftScreen, rightScreen);
+        window.setDividerPositions(0.5f);
+        primaryStage.setScene(scene);
+
+        Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
+
+        //set Stage boundaries to visible bounds of the main screen
+        primaryStage.setX(primaryScreenBounds.getMinX());
+        primaryStage.setY(primaryScreenBounds.getMinY());
+        primaryStage.setWidth(primaryScreenBounds.getWidth());
+        primaryStage.setHeight(primaryScreenBounds.getHeight());
+        primaryStage.setTitle("Copy Catch");
+        primaryStage.show();
     }
-    catch (IOException error) {
-
-    }
-
-    try {
-      String content = new String(Files.readAllBytes(Paths.get(assignmentTwo.getAbsolutePath())));
-      Text text = new Text(content);
-      fileTwo.setContent(text);
-    }
-    catch (IOException e) {
-
-    }
-
-    Scene scene = new Scene(window, 1000, 1000);
-
-    window.getItems().addAll(fileOne, fileTwo);
-    window.setDividerPositions(0.5f);
-    primaryStage.setScene(scene);
-
-    Rectangle2D primaryScreenBounds = Screen.getPrimary().getVisualBounds();
-
-    //set Stage boundaries to visible bounds of the main screen
-    primaryStage.setX(primaryScreenBounds.getMinX());
-    primaryStage.setY(primaryScreenBounds.getMinY());
-    primaryStage.setWidth(primaryScreenBounds.getWidth());
-    primaryStage.setHeight(primaryScreenBounds.getHeight());
-    primaryStage.setTitle("Copy Catch");
-    primaryStage.show();
-  }
 }

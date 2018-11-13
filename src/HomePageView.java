@@ -63,12 +63,11 @@ public class HomePageView extends Application {
         Button runProgram = new Button("Run");
 
         DirectoryChooser directoryChooser = new DirectoryChooser();
-        
+
 
 
         ColumnConstraints cons1 = new ColumnConstraints();
         cons1.setHgrow(Priority.NEVER);
-        root.getColumnConstraints().add(cons1);
 
         ColumnConstraints cons2 = new ColumnConstraints();
         cons2.setHgrow(Priority.ALWAYS);
@@ -94,14 +93,14 @@ public class HomePageView extends Application {
 
         //on run program button click
         runProgram.setOnAction(e -> {
-            if(directoryPath.getText().compareTo("") == 0) {
+            if(directoryPath.getText().equals("")) {
                 Alert alert = new Alert(AlertType.ERROR);
                 alert.setTitle("No Selected Directory");
                 alert.setHeaderText(null);
                 alert.setContentText("You must select a directory to run the scan on first.");
                 alert.showAndWait();
                 return;
-                
+
             } else {
             	if(comparisonRan)
             	{
@@ -117,7 +116,7 @@ public class HomePageView extends Application {
             		if (result.get() == ButtonType.CANCEL)
             		{
             			return;
-            		} 
+            		}
             	}
             	outputListView.setItems(null);
             	fileStats = new ArrayList<FileStats>();
@@ -130,6 +129,7 @@ public class HomePageView extends Application {
                 // converts each file in directory to generalized file.
                 //String str = Long.toHexString(Double.doubleToLongBits(Math.random()));
                 int validFileCount = 1;
+                ArrayList<File> validFiles = new ArrayList<>();
                 validFiles = new ArrayList<File>();
                 for (File assignment : directoryListing)
                 {
@@ -140,25 +140,25 @@ public class HomePageView extends Application {
                         validFiles.add(assignment);
                         System.out.print(validFileCount + ": ");
                         System.out.println(assignment);
-                        
+
                         // Implementing FileStats
                         fileStats.add(new FileStats(assignment.getName()));
-                        
+
                         ConvertFile.textConverter(assignment, fileStats.get(fileStats.size()-1));
                         validFileCount++;
                     }
                 }
 
-                Task<Void> task = new Task<Void>() 
+                Task<Void> task = new Task<Void>()
                 {
-                    @Override public Void call() 
+                    @Override public Void call()
                     {
                         final int totalComparisons = (fileStats.size()*(fileStats.size()-1))/2;
                         int completedComparisons = 0;
                         FileStats.SetScoresSize(fileStats.size()-1);
                         diff_match_patch dmp = new diff_match_patch();
                         FileComparer.FindOutliers(fileStats);
-                        for (int i=0; i < fileStats.size()-1; i++) 
+                        for (int i=0; i < fileStats.size()-1; i++)
                         {
                             for (int j = i+1; j <= fileStats.size()-1; j++ )
                             {
@@ -194,7 +194,7 @@ public class HomePageView extends Application {
                 dialogStage.initModality(Modality.APPLICATION_MODAL);
                 ProgressBar pbar = new ProgressBar();
                 progressText = new Label();
-                
+
                 pbar.progressProperty().bind(task.progressProperty());
                 pbar.setPrefWidth(300);
                 pbar.progressProperty().addListener(new ChangeListener<Number>() {
@@ -219,8 +219,8 @@ public class HomePageView extends Application {
                 new Thread(task).start();;
             }
         });
-        
-        
+
+
 
         GridPane.setHalignment(runProgram, HPos.RIGHT);
         //add items to window
@@ -242,22 +242,23 @@ public class HomePageView extends Application {
         return Double.parseDouble(str);
     }
     */
-    public void DisplayResults()
-    {
-    	comparisonRan = true;
-    	dialogStage.hide();
+    public void DisplayResults() {
+        comparisonRan = true;
+        dialogStage.hide();
         double scores[][] = FileStats.scores;
-        
+
         List<OutputCell> listResults = new ArrayList<>();
-        for (int i = 0; i < scores.length; i++)
-        {
-            for (int j = i; j < scores.length; j++)
-            {
+        for (int i = 0; i < scores.length; i++) {
+            StudentFiles studentFiles = new StudentFiles(validFiles.get(i));
+            for (int j = i; j < scores.length; j++) {
                 //Only prints those above given threshold
-                if (scores[i][j] >= 70)
-                {
-                    listResults.add(new OutputCell(validFiles.get(i), validFiles.get(j+1), Double.toString(scores[i][j])));
+                //TODO: set this to a variable
+                if (StrToDouble(scores[i][j]) >= 90) {
+                    studentFiles.addFile(validFiles.get(j + 1));
                 }
+            }
+            if (!studentFiles.similarFiles.isEmpty()) {
+                listResults.add(new OutputCell(studentFiles));
             }
         }
         ObservableList<OutputCell> observableListResults = FXCollections.observableList(listResults);
