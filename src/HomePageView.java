@@ -129,7 +129,6 @@ public class HomePageView extends Application {
                 // converts each file in directory to generalized file.
                 //String str = Long.toHexString(Double.doubleToLongBits(Math.random()));
                 int validFileCount = 1;
-                ArrayList<File> validFiles = new ArrayList<>();
                 validFiles = new ArrayList<File>();
                 for (File assignment : directoryListing)
                 {
@@ -253,7 +252,7 @@ public class HomePageView extends Application {
             for (int j = i; j < scores.length; j++) {
                 //Only prints those above given threshold
                 //TODO: set this to a variable
-                if (StrToDouble(scores[i][j]) >= 90) {
+                if (scores[i][j] >= 70) {
                     studentFiles.addFile(validFiles.get(j + 1));
                 }
             }
