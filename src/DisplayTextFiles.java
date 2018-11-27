@@ -33,8 +33,8 @@ public class DisplayTextFiles {
         CodeArea fileTwo = new CodeArea();
         fileTwo.setParagraphGraphicFactory(LineNumberFactory.get(fileTwo));
 
-        ObservableList<File> files = FXCollections.observableArrayList(studentFiles.similarFiles);
-        ComboBox<File> comboBox = new ComboBox<>(files);
+        ObservableList<FileSimilarity> files = FXCollections.observableArrayList(studentFiles.similarFiles);
+        ComboBox<FileSimilarity> comboBox = new ComboBox<>(files);
 
         Button viewFiles = new Button("View files");
 
@@ -45,7 +45,7 @@ public class DisplayTextFiles {
 
             try {
                 if (comboBox.getValue() != null && !comboBox.getValue().toString().isEmpty()) {
-                    String content = new String(Files.readAllBytes(Paths.get(comboBox.getValue().getAbsolutePath())));
+                    String content = new String(Files.readAllBytes(Paths.get(comboBox.getValue().getStudentFile().getAbsolutePath())));
                     fileTwo.replaceText(0, 0, content);
                 }
             } catch (IOException error) {

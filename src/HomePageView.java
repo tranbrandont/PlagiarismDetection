@@ -15,14 +15,8 @@ import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -42,6 +36,7 @@ public class HomePageView extends Application {
     private static Stage dialogStage;
     private static Label progressText;
     private static boolean comparisonRan = false;
+    private final int initialValue = 70;
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -49,6 +44,7 @@ public class HomePageView extends Application {
     }
 
     private void initUI(Stage primaryStage) {
+
 
         //create gridpane for window
         GridPane root = new GridPane();
@@ -59,6 +55,21 @@ public class HomePageView extends Application {
         //create all the parts of the GUI
         Button chooseDirectory = new Button("Directory");
         TextField directoryPath = new TextField();
+
+        Label spinnerLabal = new Label("Similarity Threshold");
+        Spinner similarityTreshhold = new Spinner();
+        similarityTreshhold.setEditable(true);
+
+        SpinnerValueFactory<Integer> valueFactory = //
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, initialValue);
+
+        similarityTreshhold.setValueFactory(valueFactory);
+
+        similarityTreshhold.focusedProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue) {
+                similarityTreshhold.increment(0); // won't change value, but will commit editor
+            }
+        });
         outputListView = new ListView<OutputCell>();
         Button runProgram = new Button("Run");
 
@@ -182,7 +193,7 @@ public class HomePageView extends Application {
                     }
                 };
                 task.setOnSucceeded(ep -> {
-                	DisplayResults();
+                	DisplayResults(Integer.parseInt(similarityTreshhold.getValue().toString()));
                 });
                 dialogStage = new Stage();
                 dialogStage.initStyle(StageStyle.UTILITY);
@@ -224,11 +235,13 @@ public class HomePageView extends Application {
         GridPane.setHalignment(runProgram, HPos.RIGHT);
         //add items to window
         root.add(chooseDirectory, 0, 0);
-        root.add(directoryPath, 1, 0, 2, 1);
-        root.add(outputListView, 0, 1, 4, 2);
-        root.add(runProgram, 3, 0);
+        root.add(directoryPath, 1, 0);
+        root.add(outputListView, 0, 1, 5, 2);
+        root.add(runProgram, 4, 0);
+        root.add(spinnerLabal, 2, 0);
+        root.add(similarityTreshhold, 3, 0);
 
-        Scene scene = new Scene(root, 550, 600);
+        Scene scene = new Scene(root, 800, 600);
 
         primaryStage.setTitle("Copy Catch");
         primaryStage.setScene(scene);
@@ -241,7 +254,7 @@ public class HomePageView extends Application {
         return Double.parseDouble(str);
     }
     */
-    public void DisplayResults() {
+    public void DisplayResults(int similarityThreshhold) {
         comparisonRan = true;
         dialogStage.hide();
         double scores[][] = FileStats.scores;
@@ -252,8 +265,9 @@ public class HomePageView extends Application {
             for (int j = i; j < scores.length; j++) {
                 //Only prints those above given threshold
                 //TODO: set this to a variable
-                if (scores[i][j] >= 70) {
-                    studentFiles.addFile(validFiles.get(j + 1));
+                if (scores[i][j] >= similarityThreshhold) {
+                    FileSimilarity fileSimilarity = new FileSimilarity(validFiles.get(j + 1),scores[i][j]);
+                    studentFiles.addFile(fileSimilarity);
                 }
             }
             if (!studentFiles.similarFiles.isEmpty()) {

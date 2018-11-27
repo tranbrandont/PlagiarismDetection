@@ -4,13 +4,13 @@ import java.util.ArrayList;
 public class StudentFiles {
 
     File studentFile;
-    ArrayList<File> similarFiles = new ArrayList<>();
+    ArrayList<FileSimilarity> similarFiles = new ArrayList<>();
 
     public StudentFiles(File studentFile) {
         this.studentFile = studentFile;
     }
 
-    public void addFile(File similarFile) {
+    public void addFile(FileSimilarity similarFile) {
         similarFiles.add(similarFile);
     }
 }
